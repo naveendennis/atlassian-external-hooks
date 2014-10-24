@@ -67,11 +67,11 @@ public class ExternalPreReceiveHook
             settings.getString("exe"),
             settings.getBoolean("safe_path", false)).getPath());
 
-        if (settings.getString("params") != null) {
+     /*   if (settings.getString("params") != null) {
             for (String arg : settings.getString("params").split("\r\n")) {
                 exe.add(arg);
             }
-        }
+        }*/
 
         StashUser currentUser = authCtx.getCurrentUser();
         ProcessBuilder pb = new ProcessBuilder(exe);
@@ -88,20 +88,19 @@ public class ExternalPreReceiveHook
         pb.directory(new File(repoPath));
         pb.redirectErrorStream(true);
         try {
+            
+
+            for (RefChange refChange : refChanges) {
+               exe.add(refChange.getFromHash());
+               exe.add(refChange.getToHash());
+            }
             Process process = pb.start();
             InputStreamReader input = new InputStreamReader(
                 process.getInputStream(), "UTF-8");
             OutputStream output = process.getOutputStream();
-
-            for (RefChange refChange : refChanges) {
-                output.write(
-                    (
-                        refChange.getFromHash() + " " +
-                        refChange.getToHash() + " " +
-                        refChange.getRefId() + "\n"
-                    ).getBytes("UTF-8")
-                );
-            }
+            
+            
+            
             output.close();
 
             if (hookResponse != null) {
